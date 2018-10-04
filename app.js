@@ -13,8 +13,8 @@ const ItemCtrl = (function(){
   const data = {
     items: [
       { id: 0, name: 'Placeholder meal', calories: 59768 },
-      { id: 0, name: 'Other placeholder meal', calories: 9768 },
-      { id: 0, name: 'Yet another placeholder', calories: 768 }
+      { id: 1, name: 'Other placeholder meal', calories: 9768 },
+      { id: 2, name: 'Yet another placeholder', calories: 768 }
     ],
     // Item being currently modified
     currentItem: null,
@@ -23,7 +23,10 @@ const ItemCtrl = (function(){
 
   // Public methods returned to make them available outside module
   return {
-    logData: function() {
+    getItems() {
+      return data.items;
+    },
+    logData() {
       return data;
     }
   };
@@ -32,9 +35,27 @@ const ItemCtrl = (function(){
 
 // UI Controller
 const UiCtrl = (function () {
+  // Assigning selectors here for easier future modification
+  const uiSelectors = {
+    itemList: '#item-list'
+  };
 
   return {
+    populateList(items) {
+      // Create <ul> html content
+      let listHtml = '';
+      items.forEach((item) => {
+        listHtml += `
+        <li class="collection-item" id="item-${item.id}">
+          <strong>${item.name}: </strong><em>${item.calories} Calories</em>
+          <a href="#" class="edit-item secondary-content"><i class="fa fa-pencil"></i></a>
+        </li>
+        `;
+      });
 
+      // insert <li> elements
+      document.querySelector(uiSelectors.itemList).innerHTML = listHtml;
+    }
   };
 
 })();
@@ -45,7 +66,10 @@ const App = (function (ItemCtrl, UiCtrl) {
 
   return {
     init: function() {
-      console.log('init app');
+      // Get items from data structure
+      const items = ItemCtrl.getItems();
+      // Populate list with items
+      UiCtrl.populateList(items);
     }
   };
 
@@ -53,3 +77,4 @@ const App = (function (ItemCtrl, UiCtrl) {
 
 
 App.init();
+
