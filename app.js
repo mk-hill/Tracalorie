@@ -16,7 +16,8 @@ const ItemCtrl = (function(){
       // { id: 1, name: 'Other placeholder meal', calories: 9768 },
       // { id: 2, name: 'Yet another placeholder', calories: 768 }
     ],
-    // Item being currently modified
+
+    // Item currently being modified
     currentItem: null,
     totalCalories: 0
   };
@@ -47,6 +48,24 @@ const ItemCtrl = (function(){
       return newItem;
     },
 
+    getItemById(id) {
+      let result = null;
+      data.items.forEach((item) => {
+        if (item.id === id) {
+          result = item;
+        }
+      });
+      return result;
+    },
+
+    setCurrentItem(item) {
+      data.currentItem = item;
+    },
+
+    getCurrentItem() {
+      return data.currentItem;
+    },
+
     calcTotalCals() {
       let total = 0;
       // ? Could .reduce an array of all items[n].calories instead ?
@@ -71,6 +90,9 @@ const UiCtrl = (function () {
   const uiSelectors = {
     itemList: '#item-list',
     addBtn: '.add-btn',
+    updateBtn: '.update-btn',
+    deleteBtn: '.delete-btn',
+    backBtn: '.back-btn',
     itemNameInput: '#item-name',
     itemCalsInput: '#item-calories',
     totalCals: '.total-calories'
@@ -84,7 +106,9 @@ const UiCtrl = (function () {
         listHtml += `
           <li class="collection-item" id="item-${item.id}">
             <strong>${item.name}: </strong><em>${item.calories} Calories</em>
-            <a href="#" class="edit-item secondary-content"><i class="fa fa-pencil"></i></a>
+            <a href="#" class="secondary-content">
+              <i class="edit-item fa fa-pencil"></i>
+            </a>
           </li>
           `;
       });
@@ -111,7 +135,9 @@ const UiCtrl = (function () {
       // Add inner html to <li> which has already been created
       liEl.innerHTML = `
         <strong>${item.name}: </strong><em>${item.calories} Calories</em>
-        <a href="#" class="edit-item secondary-content"><i class="fa fa-pencil"></i></a>
+        <a href="#" class="secondary-content">
+          <i class="edit-item fa fa-pencil"></i>
+        </a>
         `;
 
       // Insert item to DOM - can use insertAdjacentElement instead of appendChild
@@ -123,12 +149,33 @@ const UiCtrl = (function () {
       document.querySelector(uiSelectors.itemCalsInput).value = '';
     },
 
+    populateEditForm() {
+      document.querySelector(uiSelectors.itemNameInput).value = ItemCtrl.getCurrentItem().name;
+      document.querySelector(uiSelectors.itemCalsInput).value = ItemCtrl.getCurrentItem().calories;
+    },
+
     hideList() {
       document.querySelector(uiSelectors.itemList).style.display = 'none';
     },
 
     showTotalCals(total) {
       document.querySelector(uiSelectors.totalCals).textContent = total;
+    },
+
+    showDefaultState() {
+      UiCtrl.clearInput();
+      document.querySelector(uiSelectors.updateBtn).style.display = 'none';
+      document.querySelector(uiSelectors.deleteBtn).style.display = 'none';
+      document.querySelector(uiSelectors.backBtn).style.display = 'none';
+      document.querySelector(uiSelectors.addBtn).style.display = 'inline';
+    },
+
+    showEditState() {
+      UiCtrl.populateEditForm();
+      document.querySelector(uiSelectors.updateBtn).style.display = 'inline';
+      document.querySelector(uiSelectors.deleteBtn).style.display = 'inline';
+      document.querySelector(uiSelectors.backBtn).style.display = 'inline';
+      document.querySelector(uiSelectors.addBtn).style.display = 'none';
     },
 
     getSelectors() {
@@ -167,13 +214,47 @@ const App = (function (ItemCtrl, UiCtrl) {
     e.preventDefault();
   };
 
+  // <li> not present on DOM load, delegating event
+  const itemUpdateSubmit = (e) => {
+    if (e.target.classList.contains('edit-item')) {
+      // Get list item id from <li> (parent of parent of event target icon)
+      const elemId = e.target.parentNode.parentNode.id;
+
+      //// Split "item-n" format html id by - in between
+      //// const elemIdArr = elemId.split('-');
+      //// Get actual id number, parse as number
+      //// const id = parseInt(elemIdArr[1]);
+      
+      // ? Why not get id number straight out of html id string instead ?
+      // const id = parseInt(elemId.slice(-1));
+      // > Would only support 1 digit
+      // >> Regex solution no doubt possible
+      const id = parseInt(elemId.match(/\d+/));
+      const itemToEdit = ItemCtrl.getItemById(id);
+
+      // Set current item in ItemCtrl data
+      ItemCtrl.setCurrentItem(itemToEdit);
+
+      // Add item to form
+      UiCtrl.showEditState();
+    }
+    e.preventDefault;
+  };
+
   const loadEventListeners = () => {
     const uiSelectors = UiCtrl.getSelectors();
+
+    // Add meal event
     document.querySelector(uiSelectors.addBtn).addEventListener('click', itemAddSubmit);
+
+    // Edit meal event
+    document.querySelector(uiSelectors.itemList).addEventListener('click', itemUpdateSubmit);
   };
 
   return {
     init: function() {
+      UiCtrl.showDefaultState();
+
       // Get items from data structure
       const items = ItemCtrl.getItems();
 
