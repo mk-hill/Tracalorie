@@ -1,16 +1,22 @@
 {
   "name": "tracalorie",
   "version": "1.0.0",
-  "description": "Calorie and Meal Tracker",
+  "description": "meal and calorie tracker",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mk-hill/Tracalorie.git"
+  },
   "author": "mk-hill",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mk-hill/Tracalorie/issues"
+  },
+  "homepage": "https://github.com/mk-hill/Tracalorie#readme",
   "devDependencies": {
-    "eslint": "^5.6.0",
-    "eslint-config-airbnb-base": "^13.1.0",
-    "eslint-plugin-import": "^2.14.0"
+    "eslint": "^5.6.1"
   }
 }
