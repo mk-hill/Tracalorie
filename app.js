@@ -26,6 +26,27 @@ const ItemCtrl = (function(){
     getItems() {
       return data.items;
     },
+
+    addItem(name, calories) {
+      // Create item ID
+      let itemId;
+      if (data.items.length > 0) {
+        // If items already exist in data, add 1 to the last item's id
+        // Which we will then assign as the new item's id
+        itemId = data.items[data.items.length -1].id +1;
+      } else {
+        itemId = 0; 
+      }
+
+      // Parse calories as number for addition
+      calories = parseInt(calories);
+      // Create new item with constructor and add it to data.items array
+      newItem = new Item(itemId, name, calories);
+      data.items.push(newItem);
+
+      return newItem;
+    },
+
     logData() {
       return data;
     }
@@ -37,7 +58,10 @@ const ItemCtrl = (function(){
 const UiCtrl = (function () {
   // Assigning selectors here for easier future modification
   const uiSelectors = {
-    itemList: '#item-list'
+    itemList: '#item-list',
+    addBtn: '.add-btn',
+    itemNameInput: '#item-name',
+    itemCalsInput: '#item-calories'
   };
 
   return {
@@ -55,7 +79,19 @@ const UiCtrl = (function () {
 
       // insert <li> elements
       document.querySelector(uiSelectors.itemList).innerHTML = listHtml;
+    },
+
+    getItemInput() {
+      return {
+        name: document.querySelector(uiSelectors.itemNameInput).value,
+        calories: document.querySelector(uiSelectors.itemCalsInput).value
+      };
+    },
+
+    getSelectors() {
+      return uiSelectors;
     }
+
   };
 
 })();
@@ -63,13 +99,32 @@ const UiCtrl = (function () {
 
 // Main Controller
 const App = (function (ItemCtrl, UiCtrl) {
+  const itemAddSubmit = (e) => {
+    // Get form input from UI Controller
+    const input = UiCtrl.getItemInput();
+    // Check for valid input
+    if (!input.name || !input.calories) {
+      M.toast({
+        html: 'Enter meal name and calories.',
+      });
+    } else {
+      const newItem = ItemCtrl.addItem(input.name, input.calories);
+    }
+    e.preventDefault();
+  };
+
+  const loadEventListeners = () => {
+    const uiSelectors = UiCtrl.getSelectors();
+    document.querySelector(uiSelectors.addBtn).addEventListener('click', itemAddSubmit);
+  };
 
   return {
     init: function() {
       // Get items from data structure
       const items = ItemCtrl.getItems();
-      // Populate list with items
+      // Populate list with items from local storage
       UiCtrl.populateList(items);
+      loadEventListeners();
     }
   };
 
