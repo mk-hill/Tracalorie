@@ -47,6 +47,17 @@ const ItemCtrl = (function(){
       return newItem;
     },
 
+    calcTotalCals() {
+      let total = 0;
+      // ? Could .reduce an array of all items[n].calories instead ?
+      data.items.forEach((item) => {
+        total += item.calories;
+      });
+      // Update data with result
+      data.totalCalories = total;
+      return data.totalCalories;
+    },
+
     logData() {
       return data;
     }
@@ -61,7 +72,8 @@ const UiCtrl = (function () {
     itemList: '#item-list',
     addBtn: '.add-btn',
     itemNameInput: '#item-name',
-    itemCalsInput: '#item-calories'
+    itemCalsInput: '#item-calories',
+    totalCals: '.total-calories'
   };
 
   return {
@@ -115,6 +127,10 @@ const UiCtrl = (function () {
       document.querySelector(uiSelectors.itemList).style.display = 'none';
     },
 
+    showTotalCals(total) {
+      document.querySelector(uiSelectors.totalCals).textContent = total;
+    },
+
     getSelectors() {
       return uiSelectors;
     }
@@ -139,6 +155,12 @@ const App = (function (ItemCtrl, UiCtrl) {
       const newItem = ItemCtrl.addItem(input.name, input.calories);
       UiCtrl.addListItem(newItem);
 
+      // Calculate total calories
+      const totalCals = ItemCtrl.calcTotalCals();
+      
+      // Update ui with total calories
+      UiCtrl.showTotalCals(totalCals);
+
       // Clear input fields
       UiCtrl.clearInput();
     }
@@ -161,6 +183,13 @@ const App = (function (ItemCtrl, UiCtrl) {
       } else {
         // Populate list with items from local storage
         UiCtrl.populateList(items);
+
+        // Calculate total calories
+        // ? Store separate total and fetch that instead of calculating on each load ?
+        const totalCals = ItemCtrl.calcTotalCals();
+
+        // Update ui with total calories
+        UiCtrl.showTotalCals(totalCals);
       }
       loadEventListeners();
     }
