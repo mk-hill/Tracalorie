@@ -132,6 +132,7 @@ const ItemCtrl = (function(){
 const UiCtrl = (function () {
   // Assigning selectors here for easier future modification
   const uiSelectors = {
+    cardTitle: '.card-title',
     itemList: '#item-list',
     listItems: '#item-list li',
     clearBtn: '.clear-btn',
@@ -215,6 +216,11 @@ const UiCtrl = (function () {
       const itemId = `item-${id}`;
       const item = document.getElementById(itemId);
       item.remove();
+      // Hide empty <ul> if the last item was removed
+      const itemsLeft = ItemCtrl.getItems().length;
+      if (!itemsLeft) {
+        UiCtrl.hideList();
+      }
     },
 
     clearList() {
@@ -241,15 +247,28 @@ const UiCtrl = (function () {
       document.querySelector(uiSelectors.totalCals).textContent = total;
     },
 
+    showDefaultTitle() {
+      const cardTitle = document.querySelector(uiSelectors.cardTitle);
+      cardTitle.textContent = 'Add Meal / Food Item';
+    },
+
     showDefaultState() {
       UiCtrl.clearInput();
+      UiCtrl.showDefaultTitle();
       document.querySelector(uiSelectors.updateBtn).style.display = 'none';
       document.querySelector(uiSelectors.deleteBtn).style.display = 'none';
       document.querySelector(uiSelectors.backBtn).style.display = 'none';
       document.querySelector(uiSelectors.addBtn).style.display = 'inline';
     },
 
+    showEditTitle() {
+      const currentItem = ItemCtrl.getCurrentItem();
+      const cardTitle = document.querySelector(uiSelectors.cardTitle);
+      cardTitle.textContent = `Edit ${currentItem.name}`;
+    },
+
     showEditState() {
+      UiCtrl.showEditTitle();
       UiCtrl.populateEditForm();
       document.querySelector(uiSelectors.updateBtn).style.display = 'inline';
       document.querySelector(uiSelectors.deleteBtn).style.display = 'inline';
