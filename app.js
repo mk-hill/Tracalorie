@@ -81,6 +81,23 @@ const ItemCtrl = (function(){
       return result;
     },
 
+    deleteItem(id) {
+      // Map ids into an array
+      const idsArr = data.items.map(item => item.id);
+      
+      // Get index - may not always be equal to id if there was deletion earlier
+      const index = idsArr.indexOf(id);
+      
+      // Remove item
+      data.items.splice(index, 1);
+      // Probably a good idea to reset currentItem as well
+      data.currentItem = null;
+    },
+
+    clearAll() {
+      data.items =[];
+    },
+
     setCurrentItem(item) {
       data.currentItem = item;
     },
@@ -117,6 +134,7 @@ const UiCtrl = (function () {
   const uiSelectors = {
     itemList: '#item-list',
     listItems: '#item-list li',
+    clearBtn: '.clear-btn',
     addBtn: '.add-btn',
     updateBtn: '.update-btn',
     deleteBtn: '.delete-btn',
@@ -152,7 +170,7 @@ const UiCtrl = (function () {
       };
     },
 
-    // ? Could just use populateList() instead of add and update below ?
+    // ? Could just use populateList() instead of add/update/del below ?
     // ? but are there any performance gains from only changing one li ?
     addListItem(item) {
       // Show <ul> in case it was empty and hidden
@@ -191,6 +209,18 @@ const UiCtrl = (function () {
         `;
         }
       });
+    },
+
+    deleteListItem(id) {
+      const itemId = `item-${id}`;
+      const item = document.getElementById(itemId);
+      item.remove();
+    },
+
+    clearList() {
+      // Inner html clear appears to perform faster
+      let itemList = document.querySelector(uiSelectors.itemList);
+      itemList.innerHTML = '';
     },
 
     clearInput() {
@@ -242,6 +272,12 @@ const UiCtrl = (function () {
 
   
 const App = (function (ItemCtrl, UiCtrl) {
+  const updateTotalCals = () => {
+    // Calculate and show total calories
+    const totalCals = ItemCtrl.calcTotalCals();
+    UiCtrl.showTotalCals(totalCals);
+  };
+
   const itemAddSubmit = (e) => {
     // Get form input from UI Controller
     const input = UiCtrl.getItemInput();
@@ -255,11 +291,7 @@ const App = (function (ItemCtrl, UiCtrl) {
       const newItem = ItemCtrl.addItem(input.name, input.calories);
       UiCtrl.addListItem(newItem);
 
-      // Calculate total calories
-      const totalCals = ItemCtrl.calcTotalCals();
-      
-      // Update ui with total calories
-      UiCtrl.showTotalCals(totalCals);
+      updateTotalCals();
 
       // Clear input fields
       UiCtrl.clearInput();
@@ -298,20 +330,43 @@ const App = (function (ItemCtrl, UiCtrl) {
     const updatedItem = ItemCtrl.updateItem(input.name, input.calories);
     UiCtrl.updateListItem(updatedItem);
 
-    // Calculate and show total calories
-    const totalCals = ItemCtrl.calcTotalCals();
-    UiCtrl.showTotalCals(totalCals);
+    updateTotalCals();
 
     // Go back to default state after update is complete
     UiCtrl.showDefaultState();
     e.preventDefault();
   };
 
+  const itemDeleteSubmit = (e) => {
+    const currentItem = ItemCtrl.getCurrentItem();
+    // Send id to ItemCtrl for deletion
+
+    ItemCtrl.deleteItem(currentItem.id);
+    // Same with ui so its removed from the render
+
+    UiCtrl.deleteListItem(currentItem.id);
+    // Revert ui state
+    UiCtrl.showDefaultState();
+
+    updateTotalCals();
+    e.preventDefault();
+  };
+
+  const clearAllClick = (e) => {
+    // Delete all items from data structure
+    ItemCtrl.clearAll();
+    // Update total calcs and hide empty <ul>
+    updateTotalCals();
+    UiCtrl.hideList();
+    // Wipe all items from ui
+    UiCtrl.clearList();
+    
+    // ? Delete all items from local storage ?
+    e.preventDefault();
+  };
+
   const loadEventListeners = () => {
     const uiSelectors = UiCtrl.getSelectors();
-
-    // Add meal event
-    document.querySelector(uiSelectors.addBtn).addEventListener('click', itemAddSubmit);
 
     // Disable submit on enter - otherwise users can add copy of item while in edit state
     document.addEventListener('keypress', (e) => {
@@ -322,10 +377,23 @@ const App = (function (ItemCtrl, UiCtrl) {
       }
     });
 
-    // Edit meal event - <li> not present on DOM load, delegating event
+    // Add item event
+    document.querySelector(uiSelectors.addBtn).addEventListener('click', itemAddSubmit);
+
+    // Edit item event - <li> not present on DOM load, delegating event
     document.querySelector(uiSelectors.itemList).addEventListener('click', itemEditClick);
 
+    // Update item event
     document.querySelector(uiSelectors.updateBtn).addEventListener('click', itemUpdateSubmit);
+
+    // Back button event
+    document.querySelector(uiSelectors.backBtn).addEventListener('click', UiCtrl.showDefaultState);
+
+    // Delete item event
+    document.querySelector(uiSelectors.deleteBtn).addEventListener('click', itemDeleteSubmit);
+
+    // Clear all items event
+    document.querySelector(uiSelectors.clearBtn).addEventListener('click', clearAllClick);
   };
 
   return {
@@ -341,13 +409,7 @@ const App = (function (ItemCtrl, UiCtrl) {
       } else {
         // Populate list with items from local storage
         UiCtrl.populateList(items);
-
-        // Calculate total calories
-        // ? Store separate total and fetch that instead of calculating on each load ?
-        const totalCals = ItemCtrl.calcTotalCals();
-
-        // Update ui with total calories
-        UiCtrl.showTotalCals(totalCals);
+        updateTotalCals();
       }
       loadEventListeners();
     }
