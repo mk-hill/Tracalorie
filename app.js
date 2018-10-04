@@ -1,6 +1,14 @@
-// Local Storage Controller
+//
+// ─── LOCAL STORAGE CONTROLLER ───────────────────────────────────────────────────
+//
 
-// Food Item Controller
+  
+
+//
+// ─── ITEM CONTROLLER ────────────────────────────────────────────────────────────
+//
+
+
 const ItemCtrl = (function(){
   // Item constructor
   const Item = function(id, name, calories) {
@@ -12,6 +20,7 @@ const ItemCtrl = (function(){
   // Data Structure / State
   const data = {
     items: [
+      // No longer need placeholder data
       // { id: 0, name: 'Placeholder meal', calories: 59768 },
       // { id: 1, name: 'Other placeholder meal', calories: 9768 },
       // { id: 2, name: 'Yet another placeholder', calories: 768 }
@@ -58,6 +67,20 @@ const ItemCtrl = (function(){
       return result;
     },
 
+    updateItem(name, calories) {
+      // Calories coming from form, parse first
+      calories = parseInt(calories);
+      let result = null;
+      data.items.forEach((item) => {
+        if (item.id === data.currentItem.id) {
+          item.name = name;
+          item.calories = calories;
+          result = item;
+        }
+      });
+      return result;
+    },
+
     setCurrentItem(item) {
       data.currentItem = item;
     },
@@ -84,11 +107,16 @@ const ItemCtrl = (function(){
 })();
 
 
-// UI Controller
+//
+// ─── UI CONTROLLER ──────────────────────────────────────────────────────────────
+//
+
+
 const UiCtrl = (function () {
   // Assigning selectors here for easier future modification
   const uiSelectors = {
     itemList: '#item-list',
+    listItems: '#item-list li',
     addBtn: '.add-btn',
     updateBtn: '.update-btn',
     deleteBtn: '.delete-btn',
@@ -124,6 +152,8 @@ const UiCtrl = (function () {
       };
     },
 
+    // ? Could just use populateList() instead of add and update below ?
+    // ? but are there any performance gains from only changing one li ?
     addListItem(item) {
       // Show <ul> in case it was empty and hidden
       document.querySelector(uiSelectors.itemList).style.display = 'block';
@@ -142,6 +172,25 @@ const UiCtrl = (function () {
 
       // Insert item to DOM - can use insertAdjacentElement instead of appendChild
       document.querySelector(uiSelectors.itemList).insertAdjacentElement('beforeend', liEl);
+    },
+
+    updateListItem(updatedItem) {
+      //// let listItems = document.querySelectorAll(uiSelectors.listItems);
+      //// Turn node list into array
+      //// listItems = Array.from(listItems);
+      // Node lists support forEach!
+      const listItems = document.querySelectorAll(uiSelectors.listItems);
+      listItems.forEach((listItem) => {
+        const itemId = listItem.getAttribute('id');
+        if (itemId === `item-${updatedItem.id}`) {
+          document.getElementById(itemId).innerHTML = `
+        <strong>${updatedItem.name}: </strong><em>${updatedItem.calories} Calories</em>
+        <a href="#" class="secondary-content">
+          <i class="edit-item fa fa-pencil"></i>
+        </a>
+        `;
+        }
+      });
     },
 
     clearInput() {
@@ -187,7 +236,11 @@ const UiCtrl = (function () {
 })();
 
 
-// Main Controller
+//
+// ─── MAIN CONTROLLER ────────────────────────────────────────────────────────────
+//
+
+  
 const App = (function (ItemCtrl, UiCtrl) {
   const itemAddSubmit = (e) => {
     // Get form input from UI Controller
@@ -214,8 +267,7 @@ const App = (function (ItemCtrl, UiCtrl) {
     e.preventDefault();
   };
 
-  // <li> not present on DOM load, delegating event
-  const itemUpdateSubmit = (e) => {
+  const itemEditClick = (e) => {
     if (e.target.classList.contains('edit-item')) {
       // Get list item id from <li> (parent of parent of event target icon)
       const elemId = e.target.parentNode.parentNode.id;
@@ -241,14 +293,39 @@ const App = (function (ItemCtrl, UiCtrl) {
     e.preventDefault;
   };
 
+  const itemUpdateSubmit = (e) => {
+    const input = UiCtrl.getItemInput();
+    const updatedItem = ItemCtrl.updateItem(input.name, input.calories);
+    UiCtrl.updateListItem(updatedItem);
+
+    // Calculate and show total calories
+    const totalCals = ItemCtrl.calcTotalCals();
+    UiCtrl.showTotalCals(totalCals);
+
+    // Go back to default state after update is complete
+    UiCtrl.showDefaultState();
+    e.preventDefault();
+  };
+
   const loadEventListeners = () => {
     const uiSelectors = UiCtrl.getSelectors();
 
     // Add meal event
     document.querySelector(uiSelectors.addBtn).addEventListener('click', itemAddSubmit);
 
-    // Edit meal event
-    document.querySelector(uiSelectors.itemList).addEventListener('click', itemUpdateSubmit);
+    // Disable submit on enter - otherwise users can add copy of item while in edit state
+    document.addEventListener('keypress', (e) => {
+      // Some browsers don't appear to support keycode
+      if (e.keyCode === 13 || e.which === 13) {
+        e.preventDefault();
+        return false;
+      }
+    });
+
+    // Edit meal event - <li> not present on DOM load, delegating event
+    document.querySelector(uiSelectors.itemList).addEventListener('click', itemEditClick);
+
+    document.querySelector(uiSelectors.updateBtn).addEventListener('click', itemUpdateSubmit);
   };
 
   return {
@@ -278,6 +355,6 @@ const App = (function (ItemCtrl, UiCtrl) {
 
 })(ItemCtrl, UiCtrl);
 
+// ────────────────────────────────────────────────────────────────────────────────
 
 App.init();
-
