@@ -12,9 +12,9 @@ const ItemCtrl = (function(){
   // Data Structure / State
   const data = {
     items: [
-      { id: 0, name: 'Placeholder meal', calories: 59768 },
-      { id: 1, name: 'Other placeholder meal', calories: 9768 },
-      { id: 2, name: 'Yet another placeholder', calories: 768 }
+      // { id: 0, name: 'Placeholder meal', calories: 59768 },
+      // { id: 1, name: 'Other placeholder meal', calories: 9768 },
+      // { id: 2, name: 'Yet another placeholder', calories: 768 }
     ],
     // Item being currently modified
     currentItem: null,
@@ -41,7 +41,7 @@ const ItemCtrl = (function(){
       // Parse calories as number for addition
       calories = parseInt(calories);
       // Create new item with constructor and add it to data.items array
-      newItem = new Item(itemId, name, calories);
+      const newItem = new Item(itemId, name, calories);
       data.items.push(newItem);
 
       return newItem;
@@ -70,11 +70,11 @@ const UiCtrl = (function () {
       let listHtml = '';
       items.forEach((item) => {
         listHtml += `
-        <li class="collection-item" id="item-${item.id}">
-          <strong>${item.name}: </strong><em>${item.calories} Calories</em>
-          <a href="#" class="edit-item secondary-content"><i class="fa fa-pencil"></i></a>
-        </li>
-        `;
+          <li class="collection-item" id="item-${item.id}">
+            <strong>${item.name}: </strong><em>${item.calories} Calories</em>
+            <a href="#" class="edit-item secondary-content"><i class="fa fa-pencil"></i></a>
+          </li>
+          `;
       });
 
       // insert <li> elements
@@ -86,6 +86,33 @@ const UiCtrl = (function () {
         name: document.querySelector(uiSelectors.itemNameInput).value,
         calories: document.querySelector(uiSelectors.itemCalsInput).value
       };
+    },
+
+    addListItem(item) {
+      // Show <ul> in case it was empty and hidden
+      document.querySelector(uiSelectors.itemList).style.display = 'block';
+      // Create <li> element, add class, append 'item-' to the item.id being passed in
+      const liEl = document.createElement('li');
+      liEl.className = 'collection-item';
+      liEl.id = `item-${item.id}`;
+      
+      // Add inner html to <li> which has already been created
+      liEl.innerHTML = `
+        <strong>${item.name}: </strong><em>${item.calories} Calories</em>
+        <a href="#" class="edit-item secondary-content"><i class="fa fa-pencil"></i></a>
+        `;
+
+      // Insert item to DOM - can use insertAdjacentElement instead of appendChild
+      document.querySelector(uiSelectors.itemList).insertAdjacentElement('beforeend', liEl);
+    },
+
+    clearInput() {
+      document.querySelector(uiSelectors.itemNameInput).value = '';
+      document.querySelector(uiSelectors.itemCalsInput).value = '';
+    },
+
+    hideList() {
+      document.querySelector(uiSelectors.itemList).style.display = 'none';
     },
 
     getSelectors() {
@@ -108,7 +135,12 @@ const App = (function (ItemCtrl, UiCtrl) {
         html: 'Enter meal name and calories.',
       });
     } else {
+      // Add item to UI
       const newItem = ItemCtrl.addItem(input.name, input.calories);
+      UiCtrl.addListItem(newItem);
+
+      // Clear input fields
+      UiCtrl.clearInput();
     }
     e.preventDefault();
   };
@@ -122,8 +154,14 @@ const App = (function (ItemCtrl, UiCtrl) {
     init: function() {
       // Get items from data structure
       const items = ItemCtrl.getItems();
-      // Populate list with items from local storage
-      UiCtrl.populateList(items);
+
+      // Hide empty <ul> - use falsy instead of === 0?
+      if (!items.length) {
+        UiCtrl.hideList();
+      } else {
+        // Populate list with items from local storage
+        UiCtrl.populateList(items);
+      }
       loadEventListeners();
     }
   };
