@@ -1,0 +1,97 @@
+#remember-lever {
+  margin: 0 .5rem 0 .1rem;
+}
+
+#toast-container {
+  top: auto;
+  right: auto;
+  bottom: 0;
+  transform: scale(.95);
+}
+
+#card-main {
+  padding-top: 8px;
+  padding-bottom: 20px;
+}
+
+.fa-pencil {
+  position: relative;
+  cursor: pointer;
+  transform: scale(1.2);
+  transition: all .1s;
+  padding: 20%;
+}
+
+.fa-pencil:hover {
+  color: #00bcd4;
+}
+
+.fa-pencil:active {
+  color: #00838f;
+  transform: scale(1.1);
+}
+
+h3 {
+  font-size: 2.5rem;
+}
+
+.clear-btn:hover {
+  background-color: #c62828 !important;
+}
+
+.add-btn:hover {
+  background-color: #1e88e5 !important;
+}
+
+.update-btn:hover {
+  background-color: #26c6da !important;
+}
+
+.delete-btn:hover {
+  background-color: #f44336 !important;
+}
+
+.back-btn:hover {
+  background-color: #bdbdbd !important;
+}
+
+@media only screen and (max-width: 460px) {
+  #main-title {
+    position: relative;
+    top: 0;
+    left: 4.5rem;
+  }
+
+  #clear-btn {
+    position: relative;
+    top: -.05rem;
+    right: -1.6rem;
+    transform: scale(.9);
+  }
+
+  .update-btn {
+    overflow: hidden;
+    width: 47%;
+    margin-right: 2%;
+  }
+
+  .delete-btn {
+    overflow: hidden;
+    width: 47%;
+    margin-left: 2%;
+  }
+
+  .back-btn {
+    overflow: hidden;
+    width: 40%;
+    margin: 1rem 30% 0 30%;
+  }
+
+  #card-main {
+    padding-bottom: 10px;
+  }
+
+  h3 {
+    font-size: 2em;
+  }
+}

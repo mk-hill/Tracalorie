@@ -302,8 +302,8 @@ const UiCtrl = (function () {
     },
 
     showDefaultState() {
-      this.clearInput();
-      this.showDefaultTitle();
+      UiCtrl.clearInput();
+      UiCtrl.showDefaultTitle();
       document.querySelector(uiSelectors.updateBtn).style.display = 'none';
       document.querySelector(uiSelectors.deleteBtn).style.display = 'none';
       document.querySelector(uiSelectors.backBtn).style.display = 'none';
@@ -317,8 +317,8 @@ const UiCtrl = (function () {
     },
 
     showEditState() {
-      this.showEditTitle();
-      this.populateEditForm();
+      UiCtrl.showEditTitle();
+      UiCtrl.populateEditForm();
       document.querySelector(uiSelectors.updateBtn).style.display = 'inline';
       document.querySelector(uiSelectors.deleteBtn).style.display = 'inline';
       document.querySelector(uiSelectors.backBtn).style.display = 'inline';
@@ -437,6 +437,10 @@ const App = (function (ItemCtrl, UiCtrl, StorageCtrl) {
     
     // Wipe all items from ui
     UiCtrl.clearList();
+
+    // Clear inputs and revert to default state
+    // In case they were editing an item which no longer exists
+    UiCtrl.showDefaultState();
     
     // Clear local storage
     StorageCtrl.clearStorage();
