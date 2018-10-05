@@ -181,6 +181,7 @@ const ItemCtrl = (function(){
 const UiCtrl = (function () {
   // Assigning selectors here for easier future modification
   const uiSelectors = {
+    rememberSwitch: '#remember-checkbox',
     cardTitle: '.card-title',
     itemList: '#item-list',
     listItems: '#item-list li',
@@ -447,6 +448,18 @@ const App = (function (ItemCtrl, UiCtrl, StorageCtrl) {
     e.preventDefault();
   };
 
+  const rememberToggle = () => {
+    const uiSelectors = UiCtrl.getSelectors();
+    const rememberSwitch = document.querySelector(uiSelectors.rememberSwitch);
+    if (!rememberSwitch.checked) {
+      StorageCtrl.clearStorage();
+    } else {
+      // Repopulate storage if the user checks box later
+      const items = ItemCtrl.getItems();
+      StorageCtrl.setStoredItems(items);
+    }
+  };
+
   const loadEventListeners = () => {
     const uiSelectors = UiCtrl.getSelectors();
 
@@ -476,6 +489,9 @@ const App = (function (ItemCtrl, UiCtrl, StorageCtrl) {
 
     // Clear all items event
     document.querySelector(uiSelectors.clearBtn).addEventListener('click', clearAllClick);
+
+    // Clear local storage when user unchecks remember me
+    document.querySelector(uiSelectors.rememberSwitch).addEventListener('change', rememberToggle);
   };
 
   return {
