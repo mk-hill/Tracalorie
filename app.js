@@ -2,6 +2,54 @@
 // ─── LOCAL STORAGE CONTROLLER ───────────────────────────────────────────────────
 //
 
+
+const StorageCtrl = (function () {
+  // Public methods
+  return {
+    getStoredItems() {
+      // Check storage, return parsed data or empty array if none
+      const storedItems = localStorage.getItem('items');
+      return storedItems ? JSON.parse(storedItems) : [];
+    },
+
+    setStoredItems(items) {
+      // Local storage stores strings by default
+      localStorage.setItem('items', JSON.stringify(items));
+    },
+
+    storeItem(item) {
+      const items = this.getStoredItems();
+      items.push(item);
+      this.setStoredItems(items);
+    },
+
+    updateStoredItem(updatedItem) {
+      const items = this.getStoredItems();
+      items.forEach((item, index) => {
+        // Replace item with matching id
+        if (updatedItem.id === item.id) {
+          items.splice(index, 1, updatedItem);
+        }
+      });
+      this.setStoredItems(items);
+    },
+
+    deleteStoredItem(id) {
+      const items = this.getStoredItems();
+      items.forEach((item, index) => {
+        // Delete item with matching id
+        if (id === item.id) {
+          items.splice(index, 1);
+        }
+      });
+      this.setStoredItems(items);
+    },
+
+    clearStorage() {
+      localStorage.clear();
+    }
+  };
+})();
   
 
 //
@@ -19,12 +67,13 @@ const ItemCtrl = (function(){
 
   // Data Structure / State
   const data = {
-    items: [
-      // No longer need placeholder data
-      // { id: 0, name: 'Placeholder meal', calories: 59768 },
-      // { id: 1, name: 'Other placeholder meal', calories: 9768 },
-      // { id: 2, name: 'Yet another placeholder', calories: 768 }
-    ],
+    // items: [
+    //   // No longer need placeholder data
+    //   // { id: 0, name: 'Placeholder meal', calories: 59768 },
+    //   // { id: 1, name: 'Other placeholder meal', calories: 9768 },
+    //   // { id: 2, name: 'Yet another placeholder', calories: 768 }
+    // ],
+    items: StorageCtrl.getStoredItems(),
 
     // Item currently being modified
     currentItem: null,
@@ -219,7 +268,7 @@ const UiCtrl = (function () {
       // Hide empty <ul> if the last item was removed
       const itemsLeft = ItemCtrl.getItems().length;
       if (!itemsLeft) {
-        UiCtrl.hideList();
+        this.hideList();
       }
     },
 
@@ -253,8 +302,8 @@ const UiCtrl = (function () {
     },
 
     showDefaultState() {
-      UiCtrl.clearInput();
-      UiCtrl.showDefaultTitle();
+      this.clearInput();
+      this.showDefaultTitle();
       document.querySelector(uiSelectors.updateBtn).style.display = 'none';
       document.querySelector(uiSelectors.deleteBtn).style.display = 'none';
       document.querySelector(uiSelectors.backBtn).style.display = 'none';
@@ -268,8 +317,8 @@ const UiCtrl = (function () {
     },
 
     showEditState() {
-      UiCtrl.showEditTitle();
-      UiCtrl.populateEditForm();
+      this.showEditTitle();
+      this.populateEditForm();
       document.querySelector(uiSelectors.updateBtn).style.display = 'inline';
       document.querySelector(uiSelectors.deleteBtn).style.display = 'inline';
       document.querySelector(uiSelectors.backBtn).style.display = 'inline';
@@ -290,7 +339,7 @@ const UiCtrl = (function () {
 //
 
   
-const App = (function (ItemCtrl, UiCtrl) {
+const App = (function (ItemCtrl, UiCtrl, StorageCtrl) {
   const updateTotalCals = () => {
     // Calculate and show total calories
     const totalCals = ItemCtrl.calcTotalCals();
@@ -311,7 +360,9 @@ const App = (function (ItemCtrl, UiCtrl) {
       UiCtrl.addListItem(newItem);
 
       updateTotalCals();
-
+      
+      // Add to local storage
+      StorageCtrl.storeItem(newItem);
       // Clear input fields
       UiCtrl.clearInput();
     }
@@ -348,8 +399,10 @@ const App = (function (ItemCtrl, UiCtrl) {
     const input = UiCtrl.getItemInput();
     const updatedItem = ItemCtrl.updateItem(input.name, input.calories);
     UiCtrl.updateListItem(updatedItem);
-
     updateTotalCals();
+
+    // Update local storage
+    StorageCtrl.updateStoredItem(updatedItem);
 
     // Go back to default state after update is complete
     UiCtrl.showDefaultState();
@@ -359,11 +412,14 @@ const App = (function (ItemCtrl, UiCtrl) {
   const itemDeleteSubmit = (e) => {
     const currentItem = ItemCtrl.getCurrentItem();
     // Send id to ItemCtrl for deletion
-
     ItemCtrl.deleteItem(currentItem.id);
+    
     // Same with ui so its removed from the render
-
     UiCtrl.deleteListItem(currentItem.id);
+
+    // From storage as well
+    StorageCtrl.deleteStoredItem(currentItem.id);
+
     // Revert ui state
     UiCtrl.showDefaultState();
 
@@ -374,13 +430,16 @@ const App = (function (ItemCtrl, UiCtrl) {
   const clearAllClick = (e) => {
     // Delete all items from data structure
     ItemCtrl.clearAll();
+    
     // Update total calcs and hide empty <ul>
     updateTotalCals();
     UiCtrl.hideList();
+    
     // Wipe all items from ui
     UiCtrl.clearList();
     
-    // ? Delete all items from local storage ?
+    // Clear local storage
+    StorageCtrl.clearStorage();
     e.preventDefault();
   };
 
@@ -434,7 +493,7 @@ const App = (function (ItemCtrl, UiCtrl) {
     }
   };
 
-})(ItemCtrl, UiCtrl);
+})(ItemCtrl, UiCtrl, StorageCtrl);
 
 // ────────────────────────────────────────────────────────────────────────────────
 
